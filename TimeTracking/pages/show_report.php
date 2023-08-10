@@ -41,13 +41,13 @@ $f_project_id = helper_get_current_project();
 	<div id="time_tracking_stats" class="widget-box widget-color-blue2 <?php echo $t_block_css ?>">
 		<div class="widget-header widget-header-small">
 			<h4 class="widget-title lighter">
-				<?php print_icon( 'fa-clock-o', 'ace-icon' ); ?>
+				<i class="ace-icon fa fa-clock-o"></i>
 				<?php echo lang_get( 'time_tracking' ) ?>
 			</h4>
 			<div class="widget-toolbar">
-			<a data-action="collapse" href="#">
-				<?php print_icon( $t_block_icon, 'ace-icon 1 bigger-125' ); ?>
-			</a>
+				<a id="filter-toggle" data-action="collapse" href="#">
+					<i class="1 ace-icon fa <?php echo $t_block_icon ?> bigger-125"></i>
+				</a>
 			</div>
 		</div>
 

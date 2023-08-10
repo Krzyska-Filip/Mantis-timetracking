@@ -1,4 +1,43 @@
 <?php
+
+require_once( 'core.php' );
+require_api( 'billing_api.php' );
+require_api( 'bug_api.php' );
+
+/**
+* merge sort
+* @param array $left left side of an array
+* @param array $right right side of an array
+* @param string $column sort by which column
+* @return array sorted array
+* @access public
+*/
+function merge_Sorted_2DArrays($array1, $array2, $sortColumn) {
+    $result = array();
+    $index1 = $index2 = 0;
+
+    while ($index1 < count($array1) && $index2 < count($array2)) {
+        if ($array1[$index1][$sortColumn] < $array2[$index2][$sortColumn]) {
+            $result[] = $array1[$index1];
+            $index1++;
+        } else {
+            $result[] = $array2[$index2];
+            $index2++;
+        }
+    }
+
+    // Merge any remaining elements from both arrays
+    while ($index1 < count($array1)) {
+        $result[] = $array1[$index1];
+        $index1++;
+    }
+    while ($index2 < count($array2)) {
+        $result[] = $array2[$index2];
+        $index2++;
+    }
+
+    return $result;
+}
 /**
 * Returns an array of time tracking stats
 * @param int $p_project_id project id
@@ -19,6 +58,10 @@ function plugin_TimeTracking_stats_get_project_array( $p_project_id, $p_from, $p
 	$t_bug_table = db_get_table( 'bug' );
 	$t_user_table = db_get_table( 'user' );
 	$t_project_table = db_get_table( 'project' );
+
+	$t_core_TimeTracking_stats = billing_get_for_project($p_project_id, $t_from, $t_to, 0);
+	$t_core_TimeTracking_stats_converted = array();
+	$t_result_sorted = array();
 
 	$t_query = 'SELECT u.username, p.name as project_name, bug_id, expenditure_date, hours, timestamp, category, info 
 	FROM '.$t_timereport_table.' tr
@@ -52,13 +95,30 @@ function plugin_TimeTracking_stats_get_project_array( $p_project_id, $p_from, $p
 	$t_results = array();
 	
 	//$t_project_where $t_from_where $t_to_where $t_user_where
-	
 
 	$t_dbresult = db_query( $t_query, $t_query_parameters );
 	while( $row = db_fetch_array( $t_dbresult ) ) {
 		$t_results[] = $row;
 	}
-	return $t_results;
+
+	//Map columns from original timetracking to plugin
+	$t_date_format = config_get( 'normal_date_format' );
+	foreach ($t_core_TimeTracking_stats as $t_stat) {
+		$t_core_TimeTracking_stats_converted[] = array(
+			'username' => $t_stat['reporter_name'],
+			'project_name' => $t_stat['project_name'],
+			'bug_id' => $t_stat['bug_id'],
+			'expenditure_date' => date( $t_date_format, $t_stat['date_submitted'] ),
+			'hours' => round($t_stat['minutes'] / 60, 2),
+			'category' => $t_stat['bug_category'],
+			'timestamp' => date( $t_date_format, $t_stat['date_submitted'] ) . ':00',
+			'info' => $t_stat['note']
+		);
+	}
+
+	$t_result_sorted = merge_Sorted_2DArrays($t_results, $t_core_TimeTracking_stats_converted, 'bug_id');
+
+	return $t_result_sorted;
 }
 
 /**
@@ -83,4 +143,23 @@ function plugin_TimeTracking_hours_to_hhmm( $p_hours ) {
 	return sprintf( '%02d:%02d', $t_min / 60, $t_min % 60 );
 }
 
+/**
+* inserts new row with '\n' to make life easier while debugging
+* @access public
+*/
+function plugin_excel_get_start_row() {
+	return "<Row>\n";
+}
+function plugin_excel_get_end_row() {
+	return "</Row>\n";
+}
+/**
+* convert style id into array to use in excel_get_cell()
+* @param string $p_style id of style
+* @param string array with key ss:StyleID and value $p_style
+* @access public
+*/
+function plugin_get_style_to_array( $p_style ){
+	return array( 'ss:StyleID' => $p_style );
+}
 ?>
