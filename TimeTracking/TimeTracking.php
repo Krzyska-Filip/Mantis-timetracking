@@ -33,7 +33,7 @@ class TimeTrackingPlugin extends MantisPlugin {
 
 		$this->author = 'Elmar Schumacher, Michael Baker, Erwann Penet';
 		$this->contact = '';
-		$this->url = 'https://github.com/mantisbt-plugins/timetracking';
+		$this->url = 'https://github.com/Krzyska-Filip/Mantis-timetracking';
 	}
 
 	function hooks() {
