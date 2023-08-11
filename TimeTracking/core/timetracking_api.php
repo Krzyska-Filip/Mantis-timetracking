@@ -154,12 +154,15 @@ function plugin_excel_get_end_row() {
 	return "</Row>\n";
 }
 /**
-* convert style id into array to use in excel_get_cell()
+* apply style to single cell
+* @param string $p_text text value inside cell
 * @param string $p_style id of style
-* @param string array with key ss:StyleID and value $p_style
+* @param string $p_is_number is input a number?
+* @return string return cell with ss:StyleID
 * @access public
 */
-function plugin_get_style_to_array( $p_style ){
-	return array( 'ss:StyleID' => $p_style );
+function plugin_excel_get_cell_style( $p_text, $p_style, $p_is_number = false ){
+	$t_type = $p_is_number ? 'Number' : 'String';
+	return excel_get_cell( $p_text, $t_type, array( 'ss:StyleID' => $p_style ) );
 }
 ?>

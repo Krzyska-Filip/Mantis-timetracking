@@ -40,14 +40,14 @@ echo excel_get_header( $t_filename, $t_styles );
 
 echo str_repeat('<Column ss:AutoFitWidth="1" ss:Width="110"/>'."\n", 8);
 echo plugin_excel_get_start_row();
-echo excel_get_cell( lang_get( 'project_name' ), 'String', plugin_get_style_to_array('bg_bold') );
-echo excel_get_cell( lang_get( 'issue_id' ), 'String', plugin_get_style_to_array('bg_bold') );
-echo excel_get_cell( plugin_lang_get( 'category' ), 'String', plugin_get_style_to_array('bg_bold') );
-echo excel_get_cell( plugin_lang_get( 'user' ), 'String', plugin_get_style_to_array('bg_bold') );
-echo excel_get_cell( plugin_lang_get( 'expenditure_date' ), 'String', plugin_get_style_to_array('bg_bold') );
-echo excel_get_cell( plugin_lang_get( 'hours' ), 'String', plugin_get_style_to_array('bg_bold') );
-echo excel_get_cell( lang_get( 'timestamp' ), 'String', plugin_get_style_to_array('bg_bold') );
-echo excel_get_cell( plugin_lang_get( 'information' ), 'String', plugin_get_style_to_array('bg_bold') );
+echo plugin_excel_get_cell_style( lang_get( 'project_name' ), 'bg_bold' );
+echo plugin_excel_get_cell_style( lang_get( 'issue_id' ), 'bg_bold' );
+echo plugin_excel_get_cell_style( plugin_lang_get( 'category' ), 'bg_bold' );
+echo plugin_excel_get_cell_style( plugin_lang_get( 'user' ), 'bg_bold' );
+echo plugin_excel_get_cell_style( plugin_lang_get( 'expenditure_date' ), 'bg_bold' );
+echo plugin_excel_get_cell_style( plugin_lang_get( 'hours' ), 'bg_bold' );
+echo plugin_excel_get_cell_style( lang_get( 'timestamp' ), 'bg_bold' );
+echo plugin_excel_get_cell_style( plugin_lang_get( 'information' ), 'bg_bold' );
 echo plugin_excel_get_end_row();
 
 $t_sum_in_hours = 0;
@@ -59,7 +59,7 @@ foreach( $t_plugin_TimeTracking_stats as $t_stat ) {
 	echo excel_prepare_string( $t_stat['category'] );
 	echo excel_prepare_string( $t_stat['username'] );
 	echo excel_prepare_string( date( config_get("short_date_format"), strtotime($t_stat['expenditure_date'])) );
-	echo excel_get_cell( $t_stat['hours'], 'Number', plugin_get_style_to_array('align_center') );
+	echo plugin_excel_get_cell_style( $t_stat['hours'], 'align_center', true );
 	echo excel_prepare_string( $t_stat['timestamp'] );
 	echo excel_prepare_string( $t_stat['info'] );
 	echo plugin_excel_get_end_row();
@@ -77,8 +77,8 @@ echo plugin_excel_get_start_row();
 echo plugin_excel_get_end_row();
 
 echo plugin_excel_get_start_row();
-echo excel_get_cell( plugin_lang_get( 'user' ), 'String', plugin_get_style_to_array('bg_bold') );
-echo excel_get_cell( plugin_lang_get( 'hours' ), 'String', plugin_get_style_to_array('bg_bold') );
+echo plugin_excel_get_cell_style( plugin_lang_get( 'user' ), 'bg_bold' );
+echo plugin_excel_get_cell_style( plugin_lang_get( 'hours' ), 'bg_bold' );
 echo plugin_excel_get_end_row();
 foreach ( $t_user_summary as $t_key => $t_user){
 	echo plugin_excel_get_start_row();
