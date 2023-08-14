@@ -26,14 +26,14 @@ class TimeTrackingPlugin extends MantisPlugin {
 		$this->description = 'Time tracking plugin that supports entering date worked, time and notes. Also includes limited permissions per user.';
 		$this->page = 'config_page';
 
-		$this->version = '2.0.6';
+		$this->version = '2.0.7';
 		$this->requires = array(
-			'MantisCore' => '2.0.0'
+			'MantisCore' => '2.25.0'
 		);
 
 		$this->author = 'Elmar Schumacher, Michael Baker, Erwann Penet';
 		$this->contact = '';
-		$this->url = 'https://github.com/mantisbt-plugins/timetracking';
+		$this->url = 'https://github.com/Krzyska-Filip/Mantis-timetracking';
 	}
 
 	function hooks() {

@@ -22,36 +22,74 @@ $t_plugin_TimeTracking_stats = plugin_TimeTracking_stats_get_project_array($f_pl
 $t_filename = excel_get_default_filename();
 $t_date_format = config_get( 'normal_date_format' );
 
+$t_styles = array(
+	'bold' => new ExcelStyle('bold'),
+	'bg_bold' => new ExcelStyle('bg_bold'),
+	'align_center' => new ExcelStyle('align_center')
+);
+$t_styles['bold']->setFont(1);
+$t_styles['bg_bold']->setFont(1);
+$t_styles['bg_bold']->setBackgroundColor('#B4C6E7');
+$t_styles['align_center']->setAlignment(0, 'Center');
+
 header( 'Content-Type: application/vnd.ms-excel; charset=UTF-8' );
 header( 'Pragma: public' );
 header( 'Content-Disposition: attachment; filename="' . urlencode( file_clean_name( $t_filename ) ) . '.xml"' ) ;
 
-echo excel_get_header( $t_filename );
-echo str_repeat('<Column ss:AutoFitWidth="1" ss:Width="110"/>', 8);
-echo excel_get_start_row();
-echo excel_format_column_title( lang_get( 'project_name' ) );
-echo excel_format_column_title( lang_get( 'issue_id' ) );
-echo excel_format_column_title( plugin_lang_get( 'user' ));
-echo excel_format_column_title( plugin_lang_get( 'expenditure_date' ) );
-echo excel_format_column_title( plugin_lang_get( 'hours' ));
-echo excel_format_column_title( plugin_lang_get( 'category' ) );
-echo excel_format_column_title( lang_get( 'timestamp' ) );
-echo excel_format_column_title( plugin_lang_get( 'information' ));
-echo '</Row>';
+echo excel_get_header( $t_filename, $t_styles );
 
+echo str_repeat('<Column ss:AutoFitWidth="1" ss:Width="110"/>'."\n", 8);
+echo plugin_excel_get_start_row();
+echo plugin_excel_get_cell_style( lang_get( 'project_name' ), 'bg_bold' );
+echo plugin_excel_get_cell_style( lang_get( 'issue_id' ), 'bg_bold' );
+echo plugin_excel_get_cell_style( plugin_lang_get( 'category' ), 'bg_bold' );
+echo plugin_excel_get_cell_style( plugin_lang_get( 'user' ), 'bg_bold' );
+echo plugin_excel_get_cell_style( plugin_lang_get( 'expenditure_date' ), 'bg_bold' );
+echo plugin_excel_get_cell_style( plugin_lang_get( 'hours' ), 'bg_bold' );
+echo plugin_excel_get_cell_style( lang_get( 'timestamp' ), 'bg_bold' );
+echo plugin_excel_get_cell_style( plugin_lang_get( 'information' ), 'bg_bold' );
+echo plugin_excel_get_end_row();
+
+$t_sum_in_hours = 0;
+$t_user_summary = array();
 foreach( $t_plugin_TimeTracking_stats as $t_stat ) {
-	echo "\n<Row>\n";
+	echo plugin_excel_get_start_row();
 	echo excel_prepare_string( $t_stat['project_name'] );
 	echo excel_prepare_string( bug_format_summary( $t_stat['bug_id'], SUMMARY_FIELD ) );
+	echo excel_prepare_string( $t_stat['category'] );
 	echo excel_prepare_string( $t_stat['username'] );
 	echo excel_prepare_string( date( config_get("short_date_format"), strtotime($t_stat['expenditure_date'])) );
-	echo excel_prepare_string( $t_stat['hours'] );
-	echo excel_prepare_string( $t_stat['category'] );
+	echo plugin_excel_get_cell_style( $t_stat['hours'], 'align_center', true );
 	echo excel_prepare_string( $t_stat['timestamp'] );
 	echo excel_prepare_string( $t_stat['info'] );
-	echo "</Row>\n";
+	echo plugin_excel_get_end_row();
+
+	$t_user_summary[$t_stat['username']] = 0;
+	$t_sum_in_hours += $t_stat['hours'];
 }
 
-echo excel_get_footer();
+foreach ( $t_plugin_TimeTracking_stats as $t_item ) {
+	$t_user_summary[$t_item['username']] += $t_item['hours'];
+	$t_sum_in_hours += $t_item['hours'];
+}
 
+echo plugin_excel_get_start_row();
+echo plugin_excel_get_end_row();
+
+echo plugin_excel_get_start_row();
+echo plugin_excel_get_cell_style( plugin_lang_get( 'user' ), 'bg_bold' );
+echo plugin_excel_get_cell_style( plugin_lang_get( 'hours' ), 'bg_bold' );
+echo plugin_excel_get_end_row();
+foreach ( $t_user_summary as $t_key => $t_user){
+	echo plugin_excel_get_start_row();
+	echo excel_prepare_string( $t_key );
+	echo excel_prepare_number( $t_user );
+	echo plugin_excel_get_end_row();
+};
+echo plugin_excel_get_start_row();
+echo excel_prepare_string( 'Total: ' );
+echo excel_prepare_number( $t_sum_in_hours );
+echo plugin_excel_get_end_row();
+
+echo excel_get_footer();
 ?>
