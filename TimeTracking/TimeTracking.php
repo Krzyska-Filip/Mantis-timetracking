@@ -28,7 +28,7 @@ class TimeTrackingPlugin extends MantisPlugin {
 
 		$this->version = '2.0.7';
 		$this->requires = array(
-			'MantisCore' => '2.0.0'
+			'MantisCore' => '2.25.0'
 		);
 
 		$this->author = 'Elmar Schumacher, Michael Baker, Erwann Penet';
