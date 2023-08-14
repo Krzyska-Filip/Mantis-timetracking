@@ -1,8 +1,5 @@
 <?php
-
-require_once( 'core.php' );
 require_api( 'billing_api.php' );
-require_api( 'bug_api.php' );
 
 /**
 * merge sort
