@@ -86,6 +86,12 @@ if ( !is_blank( $f_plugin_TimeTracking_stats_button ) ) {
 	//array_multisort( $t_sort_bug, SORT_NUMERIC, $t_sort_name, $t_plugin_TimeTracking_stats );
 	//unset( $t_sort_bug, $t_sort_name );
 ?>
+	<form method="post" action="<?php echo plugin_page( 'export_time' )?>">
+		<input type="submit" class="btn btn-primary" value="<?php echo plugin_lang_get( 'export' )?>"/>
+		<input type="hidden" name="plugin_TimeTracking_tfrom_hidden" value="<?php echo $t_from ?>" />
+		<input type="hidden" name="plugin_TimeTracking_tto_hidden" value="<?php echo $t_to ?>" />
+	</form>
+
 	<div id="result" class="widget-box widget-color-blue2 <?php echo $t_block_css ?>">
 		<div class="widget-header widget-header-small">
 			<h4 class="widget-title lighter">
@@ -175,13 +181,6 @@ if ( !is_blank( $f_plugin_TimeTracking_stats_button ) ) {
 			</tr>
 			</tfoot>
 			</table>
-			</div>
-			<div class="widget-toolbox padding-8 clearfix">
-				<form method="post" action="<?php echo plugin_page( 'export_time' )?>">
-					<input type="submit" class="btn btn-primary btn-white btn-round" value="Export"/>
-					<input type="hidden" name="plugin_TimeTracking_tfrom_hidden" value="<?php echo $t_from ?>" />
-					<input type="hidden" name="plugin_TimeTracking_tto_hidden" value="<?php echo $t_to ?>" />
-				</form>
 			</div>
 		</div>
 	</div>

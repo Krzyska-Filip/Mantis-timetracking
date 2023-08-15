@@ -22,3 +22,4 @@ $s_plugin_TimeTracking_deleted = 'Usunięte';
 $s_plugin_TimeTracking_timerecord_menu = 'Przejdź do Śledzenie czasu';
 
 $s_plugin_TimeTracking_get_info = 'Pokaż dane śledzenia czasu';
+$s_plugin_TimeTracking_export = 'Eksportuj do programu Excel';

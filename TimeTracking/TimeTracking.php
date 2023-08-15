@@ -46,6 +46,7 @@ class TimeTrackingPlugin extends MantisPlugin {
 
 	function config() {
 		return array(
+            'reporter_view'         => REPORTER,
 			'admin_own_threshold'   => DEVELOPER,
 			'view_others_threshold' => MANAGER,
 			'admin_threshold'       => ADMINISTRATOR,
@@ -68,16 +69,10 @@ class TimeTrackingPlugin extends MantisPlugin {
 		$t_table = plugin_table('data');
 		$t_user_id = auth_get_current_user_id();
 
-		# Pull all Time-Record entries for the current Bug
-		if( access_has_bug_level( plugin_config_get( 'view_others_threshold' ), $p_bug_id ) ) {
+		if( access_has_bug_level( plugin_config_get( 'reporter_view' ), $p_bug_id ) ) {
 			db_param_push();
-			$t_query = 'SELECT * FROM '.$t_table.' WHERE bug_id = ' . db_param() . ' ORDER BY timestamp DESC';
+            $t_query = plugin_get_bug_time_query();
 			$t_result_pull_timerecords = db_query( $t_query, array($p_bug_id) );
-		} else if( access_has_bug_level( plugin_config_get( 'admin_own_threshold' ), $p_bug_id ) ) {
-			db_param_push();
-			$t_query = 'SELECT * FROM '.$t_table.' WHERE bug_id = ' . db_param() . ' AND user = ' . db_param() . ' ORDER BY timestamp DESC';
-			$t_result_pull_timerecords = db_query( $t_query, array($p_bug_id,$t_user_id) );
-			//$query_pull_timerecords = "SELECT * FROM $table WHERE bug_id = $p_bug_id AND user = $t_user_id ORDER BY timestamp DESC";
 		} else {
 			// User has no access
 			return;
@@ -88,8 +83,8 @@ class TimeTrackingPlugin extends MantisPlugin {
 
 		# Get Sum for this bug
 		db_param_push();
-		$t_query_pull_hours = 'SELECT SUM(hours) as hours FROM '.$t_table.' WHERE bug_id = '.db_param();
-		$t_result_pull_hours = db_query( $t_query_pull_hours, array($p_bug_id) );
+		$t_query_pull_hours = plugin_sum_hours();
+		$t_result_pull_hours = db_query( $t_query_pull_hours, array($p_bug_id, $p_bug_id) );
 		$t_row_pull_hours = db_fetch_array( $t_result_pull_hours );
 
 		$t_collapse_block = is_collapsed( 'timerecord' );
@@ -117,24 +112,24 @@ class TimeTrackingPlugin extends MantisPlugin {
    <form name="time_tracking" method="post" action="<?php echo plugin_page('add_record') ?>" >
       <?php echo form_security_field( 'plugin_TimeTracking_add_record' ) ?>
       <input type="hidden" name="bug_id" value="<?php echo $p_bug_id; ?>"/>
+      <input type="hidden" name="time_category" value="<?php echo plugin_get_bug_category($p_bug_id) ?>"/>
 
 		<div class="widget-body">
 		<div class="widget-main no-padding">
 
    <div class="table-responsive">
-   <table class="width100" cellspacing="1">
-   <tr class="row-category">
-      <td><div align="center"><b><?php echo plugin_lang_get( 'expenditure_date' ); ?></b></div></td>
-      <td><div align="center"><b><?php echo plugin_lang_get( 'hours' ); ?></b></div></td>
-      <td><div align="center"><b><?php echo plugin_lang_get( 'category' ); ?></b></div></td>
-      <td><div align="center"><b><?php echo plugin_lang_get( 'information' ); ?></b></div></td>
-      <td>&nbsp;</td>
-   </tr>
 
 <?php
 		if ( access_has_bug_level( plugin_config_get( 'admin_own_threshold' ), $p_bug_id ) ) {
 			$t_current_date = explode("-", date("Y-m-d"));
 ?>
+   <table class="width100" style="border-spacing: 5px 0; border-collapse: separate;">
+   <tr class="row-category">
+      <td><div align="center"><b><?php echo plugin_lang_get( 'expenditure_date' ); ?></b></div></td>
+      <td><div align="center"><b><?php echo plugin_lang_get( 'hours' ); ?></b></div></td>
+      <td><div align="center"><b><?php echo plugin_lang_get( 'information' ); ?></b></div></td>
+      <td>&nbsp;</td>
+   </tr>
 
    <tr>
      <td nowrap>
@@ -144,10 +139,7 @@ class TimeTrackingPlugin extends MantisPlugin {
            <select tabindex="7" name="year"><?php print_year_option_list( $t_current_date[0] ) ?></select>
         </div>
      </td>
-     <td><div align="right"><input type="text" name="time_value" value="00:00" size="5"/></div></td>
-     <td><div align="center"><select name="time_category"><?php foreach ( explode(PHP_EOL,plugin_config_get( 'categories' )) as $t_key ) {
-		echo '<option value="' . $t_key . '">' . $t_key . '</option>';
-	} ?></select></div></td>
+     <td><div align="right"><input type="text" name="time_value" value="00:00" size="5" pattern="^(?!00:00$)([0-9]{1,2}|0[0-9]{1}):[0-5][0-9]$" required title="Please enter a valid time (HH:MM) between 00:01 and 99:59"/></div></td>
      <td><div align="center"><input type="text" name="time_info"/></div></td>
      <td>
          <input type="submit"
@@ -156,10 +148,10 @@ class TimeTrackingPlugin extends MantisPlugin {
      </td>
    </tr>
 
+</table>
 <?php
 		} # END Access Control
 ?>
-</table>
    </div>
 
    <div class="table-responsive">
@@ -169,7 +161,6 @@ class TimeTrackingPlugin extends MantisPlugin {
       <th class="small-caption"><?php echo plugin_lang_get( 'user' ); ?></th>
       <th class="small-caption"><?php echo plugin_lang_get( 'expenditure_date' ); ?></th>
       <th class="small-caption"><?php echo plugin_lang_get( 'hours' ); ?></th>
-      <th class="small-caption"><?php echo plugin_lang_get( 'category' ); ?></th>
       <th class="small-caption"><?php echo plugin_lang_get( 'information' ); ?></th>
       <th class="small-caption"><?php echo plugin_lang_get( 'entry_date' ); ?></th>
       <th class="small-caption">&nbsp;</th>
@@ -189,7 +180,6 @@ class TimeTrackingPlugin extends MantisPlugin {
       <td class="small-caption"><?php echo user_get_name($t_row["user"]); ?></td>
       <td class="small-caption"><?php echo date( config_get("short_date_format"), strtotime($t_row["expenditure_date"])); ?> </td>
       <td class="small-caption"><?php echo plugin_TimeTracking_hours_to_hhmm($t_row["hours"]) ?> </td>
-      <td class="small-caption"><?php echo string_display_links($t_row["category"]); ?></td>
       <td class="small-caption"><?php echo string_display_links($t_row["info"]); ?></td>
       <td class="small-caption"><?php echo date( config_get("complete_date_format"), strtotime($t_row["timestamp"])); ?> </td>
 
@@ -224,7 +214,7 @@ class TimeTrackingPlugin extends MantisPlugin {
    <tr class="row-category">
       <td class="small-caption"><?php echo plugin_lang_get( 'sum' ) ?></td>
       <td class="small-caption">&nbsp;</td>
-      <td class="small-caption"><div align="right"><b><?php echo plugin_TimeTracking_hours_to_hhmm( $t_row_pull_hours['hours'] ); ?></b></div></td>
+      <td class="small-caption"><b><?php echo plugin_TimeTracking_hours_to_hhmm( $t_row_pull_hours['hours'] ); ?></b></td>
       <td class="small-caption">&nbsp;</td>
       <td class="small-caption">&nbsp;</td>
       <td class="small-caption">&nbsp;</td>

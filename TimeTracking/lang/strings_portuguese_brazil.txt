@@ -24,3 +24,4 @@ $s_plugin_TimeTracking_deleted = 'Removido';
 $s_plugin_TimeTracking_timerecord_menu = 'Ir para acompanhamento de tempo';
 
 $s_plugin_TimeTracking_get_info = 'Ver informações de acompanhamento de tempo';
+$s_plugin_TimeTracking_export = 'Exportar para Excel';

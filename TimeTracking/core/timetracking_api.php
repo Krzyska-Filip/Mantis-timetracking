@@ -48,7 +48,7 @@ function plugin_TimeTracking_stats_get_project_array( $p_project_id, $p_from, $p
 	$t_to = date("Y-m-d", strtotime("$p_to")+ SECONDS_PER_DAY - 1); 
 	$t_from = $p_from; //strtotime( $p_from ) 
 	if ( $t_to === false || $t_from === false ) {
-		error_parameters( array( $p_form, $p_to ) );
+		error_parameters( array( $p_from, $p_to ) );
 		trigger_error( ERROR_GENERIC, ERROR );
 	}
 	$t_timereport_table = plugin_table('data', 'TimeTracking');
@@ -132,7 +132,7 @@ function plugin_TimeTracking_hhmm_to_minutes( $p_hhmm) {
 /**
 * convert hours to a time format [h]h:mm
 * @param string $p_hhmm Time (hh:mm)
-* @return integer integer of minutes
+* @return string integer of minutes
 * @access public
 */
 function plugin_TimeTracking_hours_to_hhmm( $p_hours ) {
@@ -162,4 +162,44 @@ function plugin_excel_get_cell_style( $p_text, $p_style, $p_is_number = false ){
 	$t_type = $p_is_number ? 'Number' : 'String';
 	return excel_get_cell( $p_text, $t_type, array( 'ss:StyleID' => $p_style ) );
 }
+
+function plugin_get_bug_time_query( ){
+	$t_table = plugin_table('data');
+	
+	return '
+	SELECT * FROM 
+	(SELECT * FROM ' . $t_table . '
+	UNION
+	SELECT bn.id id, bn.bug_id bug_id, bn.reporter_id user, DATE_FORMAT(FROM_UNIXTIME(bn.date_submitted), \'%Y-%m-%d %H:%i:%s\') as expenditure_date, 
+	bn.time_tracking / 60 hours, DATE_FORMAT(FROM_UNIXTIME(bn.date_submitted), \'%Y-%m-%d %H:%i:%s\') as timestamp, c.name bug_category, bnt.note info
+	FROM {user} u JOIN {bugnote} bn ON u.id = bn.reporter_id
+	JOIN {bug} b ON bn.bug_id = b.id
+	JOIN {bugnote_text} bnt ON bnt.id = bn.bugnote_text_id
+	LEFT OUTER JOIN {category} c ON c.id=b.category_id) as combined
+	WHERE bug_id = ' . db_param() . ' AND hours != 0
+	ORDER BY expenditure_date;
+	';
+}
+
+function plugin_sum_hours(){
+	$t_table = plugin_table('data');
+
+	return '
+	SELECT SUM(hours) as hours FROM 
+	(SELECT SUM(hours) as hours FROM ' . $t_table . ' WHERE bug_id = ' . db_param() . ' GROUP BY bug_id
+	UNION
+	SELECT SUM(time_tracking) / 60 hours FROM {bugnote} WHERE bug_id = ' . db_param() . ' GROUP BY bug_id) as combined
+	';
+}
+
+function plugin_get_bug_category( $p_bug_id ){
+	$t_query = '
+	SELECT c.name AS category_name
+	FROM mantis_bug_table b
+	JOIN mantis_category_table c ON b.category_id = c.id
+	WHERE b.id = ' . db_param() . ';';
+	$t_get_category = db_query( $t_query, array( $p_bug_id) );
+	return db_fetch_array( $t_get_category )['category_name'];
+}
+
 ?>
