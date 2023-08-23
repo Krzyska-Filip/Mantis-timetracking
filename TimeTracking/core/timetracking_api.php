@@ -2,40 +2,6 @@
 require_api( 'billing_api.php' );
 
 /**
-* merge sort
-* @param array $left left side of an array
-* @param array $right right side of an array
-* @param string $column sort by which column
-* @return array sorted array
-* @access public
-*/
-function merge_Sorted_2DArrays($array1, $array2, $sortColumn) {
-    $result = array();
-    $index1 = $index2 = 0;
-
-    while ($index1 < count($array1) && $index2 < count($array2)) {
-        if ($array1[$index1][$sortColumn] < $array2[$index2][$sortColumn]) {
-            $result[] = $array1[$index1];
-            $index1++;
-        } else {
-            $result[] = $array2[$index2];
-            $index2++;
-        }
-    }
-
-    // Merge any remaining elements from both arrays
-    while ($index1 < count($array1)) {
-        $result[] = $array1[$index1];
-        $index1++;
-    }
-    while ($index2 < count($array2)) {
-        $result[] = $array2[$index2];
-        $index2++;
-    }
-
-    return $result;
-}
-/**
 * Returns an array of time tracking stats
 * @param int $p_project_id project id
 * @param string $p_from Starting date (yyyy-mm-dd) inclusive, if blank, then ignored.
@@ -43,7 +9,7 @@ function merge_Sorted_2DArrays($array1, $array2, $sortColumn) {
 * @return array array of bugnote stats
 * @access public
 */
-function plugin_TimeTracking_stats_get_project_array( $p_project_id, $p_from, $p_to) {
+function plugin_TimeTracking_stats_get_project_array( $p_project_id, $p_from, $p_to, $p_bug_id = NULL) {
 	$t_project_id = db_prepare_int( $p_project_id );
 	$t_to = date("Y-m-d", strtotime("$p_to")+ SECONDS_PER_DAY - 1); 
 	$t_from = $p_from; //strtotime( $p_from ) 
@@ -60,12 +26,22 @@ function plugin_TimeTracking_stats_get_project_array( $p_project_id, $p_from, $p
 	$t_core_TimeTracking_stats_converted = array();
 	$t_result_sorted = array();
 
-	$t_query = 'SELECT u.username, p.name as project_name, bug_id, expenditure_date, hours, timestamp, category, info 
+	$t_query = '
+	SELECT * FROM 
+	(SELECT tr.id id, u.realname username, b.project_id project_id, p.name as project_name, bug_id, expenditure_date, hours, timestamp, category, info, true AS is_new_tt 
 	FROM '.$t_timereport_table.' tr
 	LEFT JOIN '.$t_bug_table.' b ON tr.bug_id=b.id
 	LEFT JOIN '.$t_user_table.' u ON tr.user=u.id
 	LEFT JOIN '.$t_project_table.' p ON p.id = b.project_id
-	WHERE 1=1 ';
+	UNION
+	SELECT bn.id id, u.realname username, b.project_id project_id, p.name as project_name, bn.bug_id bug_id, DATE_FORMAT(FROM_UNIXTIME(bn.date_submitted), \'%Y-%m-%d\') as expenditure_date, 
+	bn.time_tracking / 60 hours, DATE_FORMAT(FROM_UNIXTIME(bn.date_submitted), \'%Y-%m-%d %H:%i:%s\') as timestamp, c.name category, bnt.note info, false AS is_new_tt 
+	FROM {user} u JOIN {bugnote} bn ON u.id = bn.reporter_id
+	JOIN {bug} b ON bn.bug_id = b.id
+	JOIN {bugnote_text} bnt ON bnt.id = bn.bugnote_text_id
+	JOIN {project} p ON p.id = b.project_id
+	LEFT OUTER JOIN {category} c ON c.id=b.category_id) as combined
+	WHERE hours != 0 ';
 	
 	db_param_push();
 	$t_query_parameters = array();
@@ -79,15 +55,19 @@ function plugin_TimeTracking_stats_get_project_array( $p_project_id, $p_from, $p
 		$t_query_parameters[] = $t_to;
 	}
 	if( ALL_PROJECTS != $t_project_id ) {
-		$t_query .= " AND b.project_id = " . db_param();
+		$t_query .= " AND project_id = " . db_param();
 		$t_query_parameters[] = $t_project_id;
 	}
 	if ( !access_has_global_level( plugin_config_get( 'view_others_threshold' ) ) ){
 		$t_user_id = auth_get_current_user_id(); 
-		$t_query .= " AND user = " . db_param();
+		$t_query .= " AND id = " . db_param();
 		$t_query_parameters[] = $t_user_id;
 	}
-	$t_query .= ' ORDER BY user, expenditure_date, bug_id';
+	if( !is_null($p_bug_id) ) {
+		$t_query .= " AND bug_id = " . db_param();
+		$t_query_parameters[] = $p_bug_id;
+	}
+	$t_query .= ' ORDER BY bug_id, expenditure_date';
 
 	$t_results = array();
 	
@@ -97,25 +77,8 @@ function plugin_TimeTracking_stats_get_project_array( $p_project_id, $p_from, $p
 	while( $row = db_fetch_array( $t_dbresult ) ) {
 		$t_results[] = $row;
 	}
-
-	//Map columns from original timetracking to plugin
-	$t_date_format = config_get( 'normal_date_format' );
-	foreach ($t_core_TimeTracking_stats as $t_stat) {
-		$t_core_TimeTracking_stats_converted[] = array(
-			'username' => $t_stat['reporter_name'],
-			'project_name' => $t_stat['project_name'],
-			'bug_id' => $t_stat['bug_id'],
-			'expenditure_date' => date( $t_date_format, $t_stat['date_submitted'] ),
-			'hours' => round($t_stat['minutes'] / 60, 2),
-			'category' => $t_stat['bug_category'],
-			'timestamp' => date( $t_date_format, $t_stat['date_submitted'] ) . ':00',
-			'info' => $t_stat['note']
-		);
-	}
-
-	$t_result_sorted = merge_Sorted_2DArrays($t_results, $t_core_TimeTracking_stats_converted, 'bug_id');
-
-	return $t_result_sorted;
+	
+	return $t_results;
 }
 
 /**
@@ -163,25 +126,7 @@ function plugin_excel_get_cell_style( $p_text, $p_style, $p_is_number = false ){
 	return excel_get_cell( $p_text, $t_type, array( 'ss:StyleID' => $p_style ) );
 }
 
-function plugin_get_bug_time_query( ){
-	$t_table = plugin_table('data');
-	
-	return '
-	SELECT * FROM 
-	(SELECT * FROM ' . $t_table . '
-	UNION
-	SELECT bn.id id, bn.bug_id bug_id, bn.reporter_id user, DATE_FORMAT(FROM_UNIXTIME(bn.date_submitted), \'%Y-%m-%d %H:%i:%s\') as expenditure_date, 
-	bn.time_tracking / 60 hours, DATE_FORMAT(FROM_UNIXTIME(bn.date_submitted), \'%Y-%m-%d %H:%i:%s\') as timestamp, c.name bug_category, bnt.note info
-	FROM {user} u JOIN {bugnote} bn ON u.id = bn.reporter_id
-	JOIN {bug} b ON bn.bug_id = b.id
-	JOIN {bugnote_text} bnt ON bnt.id = bn.bugnote_text_id
-	LEFT OUTER JOIN {category} c ON c.id=b.category_id) as combined
-	WHERE bug_id = ' . db_param() . ' AND hours != 0
-	ORDER BY expenditure_date;
-	';
-}
-
-function plugin_sum_hours(){
+function plugin_sum_hours_query(){
 	$t_table = plugin_table('data');
 
 	return '
@@ -201,5 +146,4 @@ function plugin_get_bug_category( $p_bug_id ){
 	$t_get_category = db_query( $t_query, array( $p_bug_id) );
 	return db_fetch_array( $t_get_category )['category_name'];
 }
-
 ?>

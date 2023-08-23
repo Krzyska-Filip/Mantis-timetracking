@@ -218,7 +218,7 @@ if ( !is_blank( $f_plugin_TimeTracking_stats_button ) ) {
 			<?php foreach ( $t_user_summary as $t_user_key => $t_user_value ) { ?>
 			<tr>
 			<td class="small-caption">
-			<?php echo lang_get( 'total_time' ); ?>(<?php echo $t_user_key; ?>)
+			<?php echo $t_user_key; ?>
 			</td>
 			<td class="small-caption">
 			<?php echo number_format($t_user_value, 2, '.', ','); ?> (<?php echo plugin_TimeTracking_hours_to_hhmm( $t_user_value ); ?>)

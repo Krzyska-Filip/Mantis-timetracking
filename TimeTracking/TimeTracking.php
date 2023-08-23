@@ -70,20 +70,15 @@ class TimeTrackingPlugin extends MantisPlugin {
 		$t_user_id = auth_get_current_user_id();
 
 		if( access_has_bug_level( plugin_config_get( 'reporter_view' ), $p_bug_id ) ) {
-			db_param_push();
-            $t_query = plugin_get_bug_time_query();
-			$t_result_pull_timerecords = db_query( $t_query, array($p_bug_id) );
+			$t_plugin_TimeTracking_stats = plugin_TimeTracking_stats_get_project_array( ' ', ' ', ' ', $p_bug_id);
 		} else {
 			// User has no access
 			return;
 		}
 
-		//$result_pull_timerecords = db_query( $query_pull_timerecords );
-		$t_num_timerecords = db_num_rows( $t_result_pull_timerecords );
-
 		# Get Sum for this bug
 		db_param_push();
-		$t_query_pull_hours = plugin_sum_hours();
+		$t_query_pull_hours = plugin_sum_hours_query();
 		$t_result_pull_hours = db_query( $t_query_pull_hours, array($p_bug_id, $p_bug_id) );
 		$t_row_pull_hours = db_fetch_array( $t_result_pull_hours );
 
@@ -158,45 +153,52 @@ class TimeTrackingPlugin extends MantisPlugin {
    <table class="table table-bordered table-condensed table-hover table-striped">
    <thead>
    <tr>
-      <th class="small-caption"><?php echo plugin_lang_get( 'user' ); ?></th>
-      <th class="small-caption"><?php echo plugin_lang_get( 'expenditure_date' ); ?></th>
-      <th class="small-caption"><?php echo plugin_lang_get( 'hours' ); ?></th>
+      <th class="small-caption" style="width: 150px;"><?php echo plugin_lang_get( 'user' ); ?></th>
+      <th class="small-caption" style="width: 120px;"><?php echo plugin_lang_get( 'expenditure_date' ); ?></th>
+      <th class="small-caption" style="width: 60px;"><?php echo plugin_lang_get( 'hours' ); ?></th>
+      <th class="small-caption" style="width: 60px;"><?php echo lang_get( ( 'bugnote' ) ); ?></th>
       <th class="small-caption"><?php echo plugin_lang_get( 'information' ); ?></th>
-      <th class="small-caption"><?php echo plugin_lang_get( 'entry_date' ); ?></th>
-      <th class="small-caption">&nbsp;</th>
+      <th class="small-caption" style="width: 170px;"><?php echo plugin_lang_get( 'entry_date' ); ?></th>
+      <th class="small-caption" style="width: 60px;">&nbsp;</th>
    </tr>
    </thead>
 
 
 <?php
-
-		for ( $i=0; $i < $t_num_timerecords; $i++ ) {
-			$t_row = db_fetch_array( $t_result_pull_timerecords );
+		foreach ( $t_plugin_TimeTracking_stats as $t_row ) {
 ?>
 
 
    <tbody>
    <tr>
-      <td class="small-caption"><?php echo user_get_name($t_row["user"]); ?></td>
-      <td class="small-caption"><?php echo date( config_get("short_date_format"), strtotime($t_row["expenditure_date"])); ?> </td>
-      <td class="small-caption"><?php echo plugin_TimeTracking_hours_to_hhmm($t_row["hours"]) ?> </td>
+	  <?php
+		$t_note_info = '&nbsp;';
+		if(!$t_row["is_new_tt"])
+			$t_note_info = '<a rel="bookmark" href="' . string_get_bugnote_view_url( $p_bug_id, $t_row["id"]) . '" class="lighter" title="' . lang_get( 'bugnote_link_title' ) . '">
+			' . $t_row["id"] . '
+			</a>'
+	  ?>
+      <td class="small-caption" style="width: 150px;"><?php echo $t_row["username"]; ?></td>
+      <td class="small-caption" style="width: 120px;"><?php echo date( config_get("short_date_format"), strtotime($t_row["expenditure_date"])); ?> </td>
+      <td class="small-caption" style="width: 60px;" ><?php echo plugin_TimeTracking_hours_to_hhmm($t_row["hours"]) ?> </td>
+	  <td class="small-caption" style="width: 60px;"><?php echo $t_note_info; ?> </td>
       <td class="small-caption"><?php echo string_display_links($t_row["info"]); ?></td>
-      <td class="small-caption"><?php echo date( config_get("complete_date_format"), strtotime($t_row["timestamp"])); ?> </td>
+      <td class="small-caption" style="width: 170px;"><?php echo date( config_get("complete_date_format"), strtotime($t_row["timestamp"])); ?> </td>
 
 <?php
-			if( ($t_user_id == $t_row["user"] && access_has_bug_level( plugin_config_get( 'admin_own_threshold' ), $p_bug_id) )
-			 || access_has_bug_level( plugin_config_get( 'admin_threshold' ), $p_bug_id) ) {
+			if( $t_row["is_new_tt"] && (($t_user_id == $t_row["user"] && access_has_bug_level( plugin_config_get( 'admin_own_threshold' ), $p_bug_id) )
+			 || access_has_bug_level( plugin_config_get( 'admin_threshold' ), $p_bug_id)) ) {
 ?>
 
 
-      <td class="small-caption"><a href="<?php echo plugin_page('delete_record') ?>&bug_id=<?php echo $p_bug_id; ?>&delete_id=<?php echo $t_row["id"]; ?><?php echo form_security_param( 'plugin_TimeTracking_delete_record' ) ?>"><?php echo plugin_lang_get( 'delete' ) ?>
+      <td class="small-caption" style="width: 60px;"><a href="<?php echo plugin_page('delete_record') ?>&bug_id=<?php echo $p_bug_id; ?>&delete_id=<?php echo $t_row["id"]; ?><?php echo form_security_param( 'plugin_TimeTracking_delete_record' ) ?>"><?php echo plugin_lang_get( 'delete' ) ?>
 </a></td>
 
 <?php
 			}
 			else {
 ?>
-      <td class="small-caption">&nbsp;</td>
+      <td class="small-caption"><span title="<?php echo "This entry was created automatically by 'Add Note'. \nTo delete it, please remove the note." ?>">Info</span></td>
 
 <?php
 			}
