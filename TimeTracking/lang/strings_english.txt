@@ -25,3 +25,4 @@ $s_plugin_TimeTracking_timerecord_menu = 'Jump to TimeTracking';
 
 $s_plugin_TimeTracking_get_info = 'Get time tracking information';
 $s_plugin_TimeTracking_export = 'Export to Excel';
+$s_plugin_TimeTracking_record_info = "This entry was created automatically by 'Add Note'. \nTo delete it, please remove the note.";

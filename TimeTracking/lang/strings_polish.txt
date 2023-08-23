@@ -6,6 +6,7 @@ $s_plugin_TimeTracking_user = 'Użytkownik';
 $s_plugin_TimeTracking_admin_own_threshold = 'Zarządzaj własnym czasem';
 $s_plugin_TimeTracking_view_others_threshold = 'Przeglądaj innych czas';
 $s_plugin_TimeTracking_admin_threshold = 'Zarządzaj czasem';
+$s_plugin_TimeTracking_categories = 'Kategorie';
 
 $s_plugin_TimeTracking_expenditure_date = 'Data rozliczenia';
 $s_plugin_TimeTracking_hours = 'Godziny';
@@ -23,3 +24,4 @@ $s_plugin_TimeTracking_timerecord_menu = 'Przejdź do Śledzenie czasu';
 
 $s_plugin_TimeTracking_get_info = 'Pokaż dane śledzenia czasu';
 $s_plugin_TimeTracking_export = 'Eksportuj do programu Excel';
+$s_plugin_TimeTracking_record_info = "Ten wpis został uworzony automatycznie na podstawie komentarza. \nUsuń komentarz aby usunąć wpis.";

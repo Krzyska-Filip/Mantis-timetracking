@@ -198,7 +198,7 @@ class TimeTrackingPlugin extends MantisPlugin {
 			}
 			else {
 ?>
-      <td class="small-caption"><span title="<?php echo "This entry was created automatically by 'Add Note'. \nTo delete it, please remove the note." ?>">Info</span></td>
+      <td class="small-caption"><span title="<?php echo plugin_lang_get('record_info'); ?>">Info</span></td>
 
 <?php
 			}
