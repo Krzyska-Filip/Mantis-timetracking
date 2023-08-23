@@ -309,7 +309,7 @@ if ( !is_blank( $f_plugin_TimeTracking_stats_button ) ) {
 			<?php foreach ( $t_bug_summary as $t_bug_key => $t_bug_value ) { ?>
 			<tr>
 			<td class="small-caption">
-			<?php echo bug_format_id( $t_bug_key ); ?>
+			<a href="<?php echo "./view.php?id=$t_bug_key"; ?>"><?php echo bug_format_id( $t_bug_key ); ?><a>
 			</td>
 			<td class="small-caption">
 			<?php echo number_format($t_bug_value, 2, '.', ','); ?> (<?php echo plugin_TimeTracking_hours_to_hhmm( $t_bug_value ); ?>)
