@@ -175,7 +175,7 @@ class TimeTrackingPlugin extends MantisPlugin {
 		$t_note_info = '&nbsp;';
 		if(!$t_row["is_new_tt"])
 			$t_note_info = '<a rel="bookmark" href="' . string_get_bugnote_view_url( $p_bug_id, $t_row["id"]) . '" class="lighter" title="' . lang_get( 'bugnote_link_title' ) . '">
-			' . $t_row["id"] . '
+			' . bugnote_format_id($t_row["id"]) . '
 			</a>'
 	  ?>
       <td class="small-caption" style="width: 150px;"><?php echo $t_row["username"]; ?></td>
