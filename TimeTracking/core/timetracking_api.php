@@ -9,10 +9,13 @@ require_api( 'billing_api.php' );
 * @return array array of bugnote stats
 * @access public
 */
-function plugin_TimeTracking_stats_get_project_array( $p_project_id, $p_from, $p_to, $p_bug_id = NULL) {
+function plugin_TimeTracking_stats_get_project_array( $p_project_id, $p_from, $p_to, $p_bug_id = ' ') {
 	$t_project_id = db_prepare_int( $p_project_id );
-	$t_to = date("Y-m-d", strtotime("$p_to")+ SECONDS_PER_DAY - 1); 
-	$t_from = $p_from; //strtotime( $p_from ) 
+	$t_to = date("Y-m-d", strtotime("$p_to")+ SECONDS_PER_DAY - 1);
+	$t_from = $p_from;
+	if( !is_blank( $p_from ) ){
+		$t_from = date("Y-m-d", strtotime("$p_from")); 
+	}
 	if ( $t_to === false || $t_from === false ) {
 		error_parameters( array( $p_from, $p_to ) );
 		trigger_error( ERROR_GENERIC, ERROR );
@@ -21,10 +24,6 @@ function plugin_TimeTracking_stats_get_project_array( $p_project_id, $p_from, $p
 	$t_bug_table = db_get_table( 'bug' );
 	$t_user_table = db_get_table( 'user' );
 	$t_project_table = db_get_table( 'project' );
-
-	$t_core_TimeTracking_stats = billing_get_for_project($p_project_id, $t_from, $t_to, 0);
-	$t_core_TimeTracking_stats_converted = array();
-	$t_result_sorted = array();
 
 	$t_query = '
 	SELECT * FROM 
@@ -63,7 +62,7 @@ function plugin_TimeTracking_stats_get_project_array( $p_project_id, $p_from, $p
 		$t_query .= " AND id = " . db_param();
 		$t_query_parameters[] = $t_user_id;
 	}
-	if( !is_null($p_bug_id) ) {
+	if( !is_blank($p_bug_id) ) {
 		$t_query .= " AND bug_id = " . db_param();
 		$t_query_parameters[] = $p_bug_id;
 	}
