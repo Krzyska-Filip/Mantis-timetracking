@@ -11,7 +11,7 @@ require_api( 'billing_api.php' );
 */
 function plugin_TimeTracking_stats_get_project_array( $p_project_id, $p_from, $p_to, $p_bug_id = ' ') {
 	$t_project_id = db_prepare_int( $p_project_id );
-	$t_to = date("Y-m-d", strtotime("$p_to")+ SECONDS_PER_DAY - 1);
+	$t_to = date("Y-m-d", strtotime("$p_to")) . " 23:59:59";
 	$t_from = $p_from;
 	if( !is_blank( $p_from ) ){
 		$t_from = date("Y-m-d", strtotime("$p_from")); 
@@ -56,11 +56,6 @@ function plugin_TimeTracking_stats_get_project_array( $p_project_id, $p_from, $p
 	if( ALL_PROJECTS != $t_project_id ) {
 		$t_query .= " AND project_id = " . db_param();
 		$t_query_parameters[] = $t_project_id;
-	}
-	if ( !access_has_global_level( plugin_config_get( 'view_others_threshold' ) ) ){
-		$t_user_id = auth_get_current_user_id(); 
-		$t_query .= " AND id = " . db_param();
-		$t_query_parameters[] = $t_user_id;
 	}
 	if( !is_blank($p_bug_id) ) {
 		$t_query .= " AND bug_id = " . db_param();
