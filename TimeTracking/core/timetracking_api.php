@@ -27,13 +27,13 @@ function plugin_TimeTracking_stats_get_project_array( $p_project_id, $p_from, $p
 
 	$t_query = '
 	SELECT * FROM 
-	(SELECT tr.id id, u.realname username, b.project_id project_id, p.name as project_name, bug_id, expenditure_date, hours, timestamp, category, info, true AS is_new_tt 
+	(SELECT tr.id id, u.id userid, u.realname username, b.project_id project_id, p.name as project_name, bug_id, expenditure_date, hours, timestamp, category, info, true AS is_new_tt 
 	FROM '.$t_timereport_table.' tr
 	LEFT JOIN '.$t_bug_table.' b ON tr.bug_id=b.id
 	LEFT JOIN '.$t_user_table.' u ON tr.user=u.id
 	LEFT JOIN '.$t_project_table.' p ON p.id = b.project_id
 	UNION
-	SELECT bn.id id, u.realname username, b.project_id project_id, p.name as project_name, bn.bug_id bug_id, DATE_FORMAT(FROM_UNIXTIME(bn.date_submitted), \'%Y-%m-%d\') as expenditure_date, 
+	SELECT bn.id id, u.id userid, u.realname username, b.project_id project_id, p.name as project_name, bn.bug_id bug_id, DATE_FORMAT(FROM_UNIXTIME(bn.date_submitted), \'%Y-%m-%d\') as expenditure_date, 
 	bn.time_tracking / 60 hours, DATE_FORMAT(FROM_UNIXTIME(bn.date_submitted), \'%Y-%m-%d %H:%i:%s\') as timestamp, c.name category, bnt.note info, false AS is_new_tt 
 	FROM {user} u JOIN {bugnote} bn ON u.id = bn.reporter_id
 	JOIN {bug} b ON bn.bug_id = b.id

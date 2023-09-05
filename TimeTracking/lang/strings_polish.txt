@@ -25,3 +25,4 @@ $s_plugin_TimeTracking_timerecord_menu = 'Przejdź do Śledzenie czasu';
 $s_plugin_TimeTracking_get_info = 'Pokaż dane śledzenia czasu';
 $s_plugin_TimeTracking_export = 'Eksportuj do programu Excel';
 $s_plugin_TimeTracking_record_info = "Ten wpis został uworzony automatycznie na podstawie komentarza. \nUsuń komentarz aby usunąć wpis.";
+$s_plugin_TimeTracking_delete_info = "Nie masz wystarczających uprawnień aby usunąć ten rekord";
