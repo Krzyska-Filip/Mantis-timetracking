@@ -17,7 +17,17 @@ helper_begin_long_process();
 $f_plugin_project = helper_get_current_project();
 $t_from = gpc_get_string('plugin_TimeTracking_tfrom_hidden');
 $t_to = gpc_get_string('plugin_TimeTracking_tto_hidden');
-$t_plugin_TimeTracking_stats = plugin_TimeTracking_stats_get_project_array($f_plugin_project, $t_from, $t_to);
+
+if ( access_has_project_level( plugin_config_get( 'view_others_threshold' ) ) && gpc_isset( 'handler_id' ) ){
+	$t_user_id = gpc_get( 'handler_id' );
+	if( $t_user_id == 0 ) { 
+		$t_user_id = ' '; 
+	}
+} else {
+	$t_user_id = auth_get_current_user_id();
+}
+
+$t_plugin_TimeTracking_stats = plugin_TimeTracking_stats_get_project_array($f_plugin_project, $t_from, $t_to, $t_user_id, ' ');
 
 $t_filename = excel_get_default_filename();
 $t_date_format = config_get( 'normal_date_format' );
@@ -70,7 +80,6 @@ foreach( $t_plugin_TimeTracking_stats as $t_stat ) {
 
 foreach ( $t_plugin_TimeTracking_stats as $t_item ) {
 	$t_user_summary[$t_item['username']] += $t_item['hours'];
-	$t_sum_in_hours += $t_item['hours'];
 }
 
 echo plugin_excel_get_start_row();

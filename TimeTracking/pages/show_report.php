@@ -65,6 +65,19 @@ $f_project_id = helper_get_current_project();
 					$t_filter['end_year'] = $t_plugin_TimeTracking_stats_to_y;
 					filter_init( $t_filter );
 					print_filter_do_filter_by_date(true);
+
+					echo '<table style="margin-top: 10px;"><tr>';
+					echo '<td style="padding-right: 5px;">' . plugin_lang_get('select_user') . '</td>';
+					if( access_has_project_level( plugin_config_get( 'view_others_threshold' ) ) ) {
+						echo '<td><select ' . helper_get_tab_index() . ' id="handler_id" name="handler_id" class="input-xs">';
+						echo '<option value="0">' . plugin_lang_get('everyone') . '</option>';
+							print_assign_to_option_list( gpc_get_int( 'handler_id', 0 ), $f_project_id );
+						echo '</select></td>';
+					}else{
+						echo '<td><input type="text" class="input-xs" disabled value="'. user_get_realname( auth_get_current_user_id() ) .'">';
+					}
+					echo '</tr></table>';
+
 					?>
 				</div>
 				<div class="widget-toolbox padding-8 clearfix">
@@ -79,17 +92,24 @@ $f_project_id = helper_get_current_project();
 
 if ( !is_blank( $f_plugin_TimeTracking_stats_button ) ) {
 	# Retrieve time tracking information
+	if ( access_has_project_level( plugin_config_get( 'view_others_threshold' ) ) && gpc_isset( 'handler_id' ) ){
+		$t_user_id = gpc_get( 'handler_id' );
+		if( $t_user_id == 0 ) { 
+			$t_user_id = ' '; 
+		}
+	} else {
+		$t_user_id = auth_get_current_user_id();
+	}
+
 	$t_from = "$t_plugin_TimeTracking_stats_from_y-$t_plugin_TimeTracking_stats_from_m-$t_plugin_TimeTracking_stats_from_d";
 	$t_to = "$t_plugin_TimeTracking_stats_to_y-$t_plugin_TimeTracking_stats_to_m-$t_plugin_TimeTracking_stats_to_d";
-	$t_plugin_TimeTracking_stats = plugin_TimeTracking_stats_get_project_array( $f_project_id, $t_from, $t_to);
-	//$t_sort_bug = $t_sort_name = array();
-	//array_multisort( $t_sort_bug, SORT_NUMERIC, $t_sort_name, $t_plugin_TimeTracking_stats );
-	//unset( $t_sort_bug, $t_sort_name );
+	$t_plugin_TimeTracking_stats = plugin_TimeTracking_stats_get_project_array( $f_project_id, $t_from, $t_to, $t_user_id, ' ');
 ?>
-	<form method="post" action="<?php echo plugin_page( 'export_time' )?>">
-		<input type="submit" class="btn btn-primary" value="<?php echo plugin_lang_get( 'export' )?>"/>
+	<form method="post" action="<?php echo plugin_page( 'export_time' )?>" style="margin-bottom: 10px;">
+		<input type="submit" class="btn btn-primary" value="<?php echo plugin_lang_get( 'export' )?>" style="border-radius: 4px;"/>
 		<input type="hidden" name="plugin_TimeTracking_tfrom_hidden" value="<?php echo $t_from ?>" />
 		<input type="hidden" name="plugin_TimeTracking_tto_hidden" value="<?php echo $t_to ?>" />
+		<input type="hidden" name="handler_id" value="<?php echo $t_user_id ?>" />
 	</form>
 
 	<div id="result" class="widget-box widget-color-blue2 <?php echo $t_block_css ?>">
@@ -107,7 +127,7 @@ if ( !is_blank( $f_plugin_TimeTracking_stats_button ) ) {
 
 		<div class="widget-body">
 			<div class="table-responsive">
-			<table class="table table-bordered table-condensed table-hover table-striped">
+			<table class="table table-bordered table-condensed table-hover table-striped" style="margin: 0">
 			<thead>
 			<tr>
 			<td class="small-caption">
@@ -185,24 +205,23 @@ if ( !is_blank( $f_plugin_TimeTracking_stats_button ) ) {
 		</div>
 	</div>
 	
-	<div class="space-10"></div>
-
-	<div id="result-user" class="widget-box widget-color-blue2 <?php echo $t_block_css ?>">
+	<div style="
+		display: inline-grid; 
+		width: 100%;
+		grid-template-columns: repeat(3, auto);
+		gap: 0 10px;
+		grid-template-rows: max-content;
+	">
+	<div id="result-user" class="widget-box widget-color-blue2 <?php echo $t_block_css ?>" style="grid-column:1/2">
 		<div class="widget-header widget-header-small">
-			<h4 class="widget-title lighter">
-				<i class="ace-icon fa fa-clock-o"></i>
-				<?php echo plugin_lang_get( 'title' ), ' - ', plugin_lang_get( 'user' ) ?>
-			</h4>
-			<div class="widget-toolbar">
-				<a id="result-user-toggle" data-action="collapse" href="#">
-					<i class="1 ace-icon fa <?php echo $t_block_icon ?> bigger-125"></i>
-				</a>
-			</div>
+			<h6 class="widget-title lighter">
+				<?php echo plugin_lang_get( 'filter_user' ) ?>
+			</h6>
 		</div>
 
 		<div class="widget-body">
 			<div class="table-responsive">
-			<table class="table table-bordered table-condensed table-hover table-striped">
+			<table class="table table-bordered table-condensed table-hover table-striped" style="margin: 0">
 			<thead>
 			<tr>
 			<td class="small-caption">
@@ -230,25 +249,17 @@ if ( !is_blank( $f_plugin_TimeTracking_stats_button ) ) {
 			</div>
 		</div>
 	</div>
-	
-	<div class="space-10"></div>
 
-	<div id="result-project" class="widget-box widget-color-blue2 <?php echo $t_block_css ?>">
+	<div id="result-project" class="widget-box widget-color-blue2 <?php echo $t_block_css ?>" style="grid-column:2/3">
 		<div class="widget-header widget-header-small">
-			<h4 class="widget-title lighter">
-				<i class="ace-icon fa fa-clock-o"></i>
-				<?php echo plugin_lang_get( 'title' ), ' - ', lang_get( 'project_name' ) ?>
-			</h4>
-			<div class="widget-toolbar">
-				<a id="result-project-toggle" data-action="collapse" href="#">
-					<i class="1 ace-icon fa <?php echo $t_block_icon ?> bigger-125"></i>
-				</a>
-			</div>
+			<h6 class="widget-title lighter">
+				<?php echo plugin_lang_get( 'filter_project' ) ?>
+			</h6>
 		</div>
 
 		<div class="widget-body">
 			<div class="table-responsive">
-			<table class="table table-bordered table-condensed table-hover table-striped">
+			<table class="table table-bordered table-condensed table-hover table-striped" style="margin: 0">
 			<thead>
 			<tr>
 			<td class="small-caption">
@@ -276,25 +287,17 @@ if ( !is_blank( $f_plugin_TimeTracking_stats_button ) ) {
 			</div>
 		</div>
 	</div>
-	
-	<div class="space-10"></div>
 
-	<div id="result-issue" class="widget-box widget-color-blue2 <?php echo $t_block_css ?>">
+	<div id="result-issue" class="widget-box widget-color-blue2 <?php echo $t_block_css ?>" style="grid-column:3/4">
 		<div class="widget-header widget-header-small">
-			<h4 class="widget-title lighter">
-				<i class="ace-icon fa fa-clock-o"></i>
-				<?php echo plugin_lang_get( 'title' ), ' - ', lang_get( 'issue_id' ) ?>
-			</h4>
-			<div class="widget-toolbar">
-				<a id="esult-issue-toggle" data-action="collapse" href="#">
-					<i class="1 ace-icon fa <?php echo $t_block_icon ?> bigger-125"></i>
-				</a>
-			</div>
+			<h6 class="widget-title lighter">
+				<?php echo plugin_lang_get( 'filter_issue' ) ?>
+			</h6>
 		</div>
 
 		<div class="widget-body">
 			<div class="table-responsive">
-			<table class="table table-bordered table-condensed table-hover table-striped">
+			<table class="table table-bordered table-condensed table-hover table-striped" style="margin: 0">
 			<thead>
 			<tr>
 			<td class="small-caption">
@@ -320,6 +323,7 @@ if ( !is_blank( $f_plugin_TimeTracking_stats_button ) ) {
 			</table>
 			</div>
 		</div>
+	</div>
 	</div>
 
 <?php } ?>

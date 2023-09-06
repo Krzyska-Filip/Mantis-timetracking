@@ -70,7 +70,7 @@ class TimeTrackingPlugin extends MantisPlugin {
 		$t_user_id = auth_get_current_user_id();
 
 		if( access_has_bug_level( plugin_config_get( 'reporter_view' ), $p_bug_id ) ) {
-			$t_plugin_TimeTracking_stats = plugin_TimeTracking_stats_get_project_array( ' ', ' ', ' ', $p_bug_id);
+			$t_plugin_TimeTracking_stats = plugin_TimeTracking_stats_get_project_array( ' ', ' ', ' ', ' ', $p_bug_id);
 		} else {
 			// User has no access
 			return;
@@ -186,10 +186,10 @@ class TimeTrackingPlugin extends MantisPlugin {
       <td class="small-caption" style="width: 170px;"><?php echo date( config_get("complete_date_format"), strtotime($t_row["timestamp"])); ?> </td>
 
 <?php
-			if( $t_row["is_new_tt"] && (($t_user_id == $t_row["userid"] && access_has_bug_level( plugin_config_get( 'admin_own_threshold' ), $p_bug_id) ) || access_has_bug_level( plugin_config_get( 'admin_threshold' ), $p_bug_id)) ) {
+			if( $t_row["is_new_tt"] && (($t_user_id == $t_row["user_id"] && access_has_bug_level( plugin_config_get( 'admin_own_threshold' ), $p_bug_id) ) || access_has_bug_level( plugin_config_get( 'admin_threshold' ), $p_bug_id)) ) {
 				echo '<td class="small-caption" style="width: 60px;"><a href="'.plugin_page('delete_record').'?>&bug_id='.$p_bug_id.'&delete_id='.$t_row["id"].form_security_param( 'plugin_TimeTracking_delete_record' ).'">'.plugin_lang_get( 'delete' ).'</a></td>';
 			}
-			elseif( $t_row["is_new_tt"] && !(($t_user_id == $t_row["userid"] && access_has_bug_level( plugin_config_get( 'admin_own_threshold' ), $p_bug_id) ) || access_has_bug_level( plugin_config_get( 'admin_threshold' ), $p_bug_id))){
+			elseif( $t_row["is_new_tt"] && !(($t_user_id == $t_row["user_id"] && access_has_bug_level( plugin_config_get( 'admin_own_threshold' ), $p_bug_id) ) || access_has_bug_level( plugin_config_get( 'admin_threshold' ), $p_bug_id))){
 				echo '<td class="small-caption"><span title="'.plugin_lang_get('delete_info').'">Info</span></td>';
 			}
 			else {

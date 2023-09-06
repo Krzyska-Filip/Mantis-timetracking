@@ -27,3 +27,9 @@ $s_plugin_TimeTracking_get_info = 'Get time tracking information';
 $s_plugin_TimeTracking_export = 'Export to Excel';
 $s_plugin_TimeTracking_record_info = "This entry was created automatically by 'Add Note'. \nTo delete it, please remove the note.";
 $s_plugin_TimeTracking_delete_info = "You don't have sufficient permissions to delete this record.";
+$s_plugin_TimeTracking_select_user = "Select User:";
+$s_plugin_TimeTracking_everyone = "Everyone";
+
+$s_plugin_TimeTracking_filter_user = "By User";
+$s_plugin_TimeTracking_filter_project = "By Project";
+$s_plugin_TimeTracking_filter_issue = "By Issue";
